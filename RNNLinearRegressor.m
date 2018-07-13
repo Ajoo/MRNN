@@ -18,6 +18,7 @@ classdef RNNLinearRegressor < handle
         h_end_
         dl_
         d2l_
+        y_
     end
     
     methods
@@ -40,9 +41,17 @@ classdef RNNLinearRegressor < handle
             end
         end
         
+        function [yh, l] = recall(mdl)
+            h_end = recall(mdl.rnn);
+            yh = mdl.Wo*h_end(:,:) + mdl.b;
+            l = mdl.loss(mdl.y_, yh);
+            
+            mdl.h_end_ = h_end;
+            mdl.dl_ = mdl.dloss(mdl.y_, yh);
+            mdl.d2l_ = mdl.d2loss(mdl.y_,yh);
+        end
         
-        
-        function [l, yh] = call(mdl, x, y)
+        function [yh, l] = call(mdl, x, y)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             h_end = call(mdl.rnn, x);
@@ -53,6 +62,7 @@ classdef RNNLinearRegressor < handle
             mdl.h_end_ = h_end;
             mdl.dl_ = mdl.dloss(y, yh);
             mdl.d2l_ = mdl.d2loss(y,yh);
+            mdl.y_ = y;
         end
         
         function [yh_v, l_v] = fdiff(mdl, v)
@@ -66,6 +76,9 @@ classdef RNNLinearRegressor < handle
         end
         
         function u_yh = bdiff(mdl, u, ul)
+            if nargin < 2 || isempty(u)
+                u = zeros(size(mdl.dl_));
+            end
             if nargin >= 3
             	u = u + ul*mdl.dl_;
             end

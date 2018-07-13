@@ -1,0 +1,10 @@
+- Redo RNN bdiff and fdiff so they don't require concatenation
+of possibly large vectors thus incuring in time wasted on
+memory copying
+- Write norm constrained version of pcg to implement CG steinhaug
+- Possibly implement other thrust region approaches (like iterative)
+ using only matlab's pcg
+- Add preconditioning
+- Add possibility to start from previous initial step
+ (on non thrust-region approaches)
+
