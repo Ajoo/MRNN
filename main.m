@@ -11,9 +11,10 @@ opt = PCGOptimizer(mdl, 100, 'RelTol', 1e-5);
 %%
 [~, l] = call(mdl, x, y);
 %%
-profile on
-[rho, flag, relres, iter] =  step(opt, l);
-profile viewer
+tic
+[l, rho, flag, relres, iter] =  step(opt, l);
+toc
+disp(['loss: ', num2str(l/BATCH_SIZE)])
 disp(['rho: ', num2str(rho)])
 disp(['iter: ', num2str(iter)])
 disp(['damping: ', num2str(opt.state.damping)])

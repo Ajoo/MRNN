@@ -23,7 +23,7 @@ classdef PCGOptimizer < handle
                                  'RelTol', 1e-6, ...
                                  'MaxIter', model.paramsize);
             
-            for i=1:numel(varargin)/2
+            for i=1:2:numel(varargin)
                 opt.options.(varargin{i}) = varargin{i+1};
             end       
         end
@@ -39,7 +39,7 @@ classdef PCGOptimizer < handle
             accept = (reductionratio > opt.options.RejectionThreshold);
         end
         
-        function [reductionratio, flag, relres, iter] = step(opt, loss)
+        function [newloss, reductionratio, flag, relres, iter] = step(opt, loss)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             g = bdiff(opt.model, [], 1);
@@ -67,6 +67,7 @@ classdef PCGOptimizer < handle
             % take back step if not accepted
             if ~update(opt, reductionratio)
                 opt.model.params = opt.model.params - step;
+                newloss = loss;
             end
             
             opt.state.previousstep = step;

@@ -12,7 +12,7 @@ classdef RNN < handle
     properties (Access=private)
         batchsize
         h0_
-        y_ % store pre-activations
+        h_ % store pre-activations
         x_ % store inputs
     end
     properties (Dependent)
@@ -49,7 +49,6 @@ classdef RNN < handle
         end
         
         function [h_end, h] = call(rnn, x, h0)
-            fullseq = nargout >= 2;
             
             % side-effect: store hidden state vs time in internal buffer
             nh = rnn.hiddensize;
@@ -65,25 +64,19 @@ classdef RNN < handle
             end
 
             hx = reshape(rnn.Wx*x(:,:) + rnn.b, nh, nb, nt); % precompute Wx*x_i + b            
+            h = zeros(nh, nb, nt);     % store intermediate state
             
-            if fullseq
-                h = zeros(nh, nb, nt);     % store intermediate state
-            end
-            y = zeros(nh, nb, nt);
             h_end = h0;
             for i=1:nt
                 y_end = rnn.Wh*h_end + hx(:,:,i);
                 h_end = rnn.activation(y_end);
-                y(:,:,i) = y_end;
-                if fullseq
-                    h(:,:,i) = h_end;
-                end
+                h(:,:,i) = h_end;
             end
             if ~isempty(sb)
                 h_end = reshape(h_end, nh, sb{:});
             end
             rnn.h0_ = h0;
-            rnn.y_ = y;
+            rnn.h_ = h;
             rnn.x_ = x;
             rnn.batchsize = sb;
         end
@@ -93,26 +86,27 @@ classdef RNN < handle
             
             % retrieve buffers
             x = rnn.x_;
-            y = rnn.y_;
+            h = rnn.h_;
             % compute sizes
             nh = rnn.hiddensize;
             sb = rnn.batchsize;
-            [nx, nb, nt] = size(y);
+            [nx, nb, nt] = size(x);
             % pre-alocate ouputs
             fullseq = nargout >= 2;
             if fullseq
                 h_v = zeros(nx, nb, nt);
-            end
-            h_end_v = zeros(nx, nb);
-            
-            % TODO: might want to rework this to save memory...
-            hprev = cat(3, rnn.h0_, rnn.activation(y));
-            hx1 = [hprev(:,:,1:end-1); x; ones(1,nb,nt)];    % re-compute hidden-states
-            h_y = rnn.dactivation(hprev(:,:,2:end));         % pre-compute dactivations
+            end            
+            % TODO: might want to store these to save computation time
+            %       or do these in for loop instead of vectorized to save
+            %       memory
+            h_y = rnn.dactivation(h);   % pre-compute dactivations
             v = reshape(v, nh, []);
             
-            for i=1:nt
-                h_end_v = rnn.Wh*h_end_v + v*hx1(:,:,i);
+            h_end_v = v(:,1:nh)*rnn.h0_ + v(:,nh+1:nh+nx)*x(:,:,1) + v(:,nh+nx+1);
+            for i=2:nt
+                h_end_v = rnn.Wh*h_end_v + v(:,1:nh)*h(:,:,i-1) + ...
+                                           v(:,nh+1:nh+nx)*x(:,:,i)+...
+                                           v(:,nh+nx+1);
                 h_end_v = h_y(:,:,i).*h_end_v;
                 if fullseq
                     h_v(:,:,i) = h_end_v;
@@ -126,28 +120,47 @@ classdef RNN < handle
             
             % retrieve buffers
             x = rnn.x_;
-            y = rnn.y_;
+            h = rnn.h_;
             % compute sizes
             nh = rnn.hiddensize;
             nx = rnn.inputsize;
             sb = rnn.batchsize;
-            [~, nb, nt] = size(y); % check ~ same as nx
+            [~, nb, nt] = size(h); % check ~ same as nx
             np = rnn.paramsize;
-            % TODO: might want to rework this to save memory...
-            hprev = cat(3, rnn.h0_, rnn.activation(y));
-            hx1 = [hprev(:,:,1:end-1); x; ones(1,nb,nt)];    % re-compute hidden-states
-            h_y = rnn.dactivation(hprev(:,:,2:end));         % pre-compute dactivations
+            % TODO: might want to store these to save computation time
+            %       or do these in for loop instead of vectorized to save
+            %       memory
             
-            % pre-alocate ouputs
-            l_0 = h_y(:,:,end).*u_end;
-            u_h_p = l_0*hx1(:,:,end)';
+%             h_y = rnn.dactivation(permute(h, [2,1,3]));
+            h_y = rnn.dactivation(h);
+            l_0 = (h_y(:,:,end).*u_end).';
+            u_h_p = zeros(nh+nx+1, nh);
             for i=nt-1:-1:1
-                l_0 = rnn.Wh'*l_0;
-                l_0 = h_y(:,:,i).*l_0;
-                u_h_p = u_h_p + l_0*hx1(:,:,i)';
+                u_h_p = u_h_p + [h(:,:,i); 
+                                 x(:,:,i+1); 
+                                 ones(1,nb)]*l_0;
+                l_0 = l_0*rnn.Wh;
+                l_0 = l_0.*h_y(:,:,i).';
             end
-            
-            u_h_p = u_h_p(:);
+            u_h_p = u_h_p + [rnn.h0_; 
+                             x(:,:,1); 
+                             ones(1,nb)]*l_0;
+            u_h_p = reshape(u_h_p.', [], 1); 
+%             h_y = rnn.dactivation(h);
+%             hprev = cat(3, rnn.h0_, h);
+%             hx1 = [hprev(:,:,1:end-1); x; ones(1,nb,nt)];    % re-compute hidden-states
+%             h_y = rnn.dactivation(hprev(:,:,2:end));         % pre-compute dactivations
+%             
+%             % pre-alocate ouputs
+%             l_0 = h_y(:,:,end).*u_end;
+%             u_h_p = l_0*hx1(:,:,end)';
+%             for i=nt-1:-1:1
+%                 l_0 = rnn.Wh'*l_0;
+%                 l_0 = h_y(:,:,i).*l_0;
+%                 u_h_p = u_h_p + l_0*hx1(:,:,i)';
+%             end
+%             
+%             u_h_p = u_h_p(:);
         end
         
 %         function [u_h_p] = bdiff(rnn, u)
