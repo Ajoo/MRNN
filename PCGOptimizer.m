@@ -21,7 +21,10 @@ classdef PCGOptimizer < handle
             opt.options = struct('MaxDamping', Inf, ...
                                  'RejectionThreshold', 0, ...
                                  'RelTol', 1e-6, ...
-                                 'MaxIter', model.paramsize);
+                                 'MaxIter', model.paramsize, ...
+                                 'Preconditioner', [], ...
+                                 'PreconditionerSupression', 1,...
+                                 'HotRestart', true);
             
             for i=1:2:numel(varargin)
                 opt.options.(varargin{i}) = varargin{i+1};
@@ -51,8 +54,20 @@ classdef PCGOptimizer < handle
             end
             
             damping = opt.state.damping;
+            preconditioner = opt.options.Preconditioner;
+            if ~isempty(preconditioner)
+                alpha = opt.options.PreconditionerSupression;
+                minv = (preconditioner(opt.model) + damping).^-alpha;
+                preconditioner = @(x) minv.*x;
+            end
+            if opt.options.HotRestart
+                x0 = opt.state.previousstep;
+            else
+                x0 = [];
+            end
             % compute step
-            [step, flag, relres, iter] = pcg(@gvp_, -g, tol, opt.options.MaxIter);
+            [step, flag, relres, iter] = pcg(@gvp_, -g, tol, opt.options.MaxIter, ...
+                preconditioner, [], x0);
             
             % compute predicted reduction along step
             [~, loss_s] = fdiff(opt.model, step);
@@ -68,9 +83,11 @@ classdef PCGOptimizer < handle
             if ~update(opt, reductionratio)
                 opt.model.params = opt.model.params - step;
                 newloss = loss;
+                opt.state.previousstep = zeros(numel(step),1);
+            else
+                opt.state.previousstep = step;
             end
-            
-            opt.state.previousstep = step;
+                
             function gv = gvp_(v)
                 gv = gvp(opt.model, v) + damping*v;
             end

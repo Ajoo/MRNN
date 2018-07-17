@@ -88,12 +88,35 @@ classdef RNNLinearRegressor < handle
         end
         
         % TODO: versions of bdiff and fdiff that don't include loss
-        function gv = gvp(mdl, v)
+        function [gv, n2jv] = gvp(mdl, v)
             yh_v = fdiff(mdl, v);
             if ~isempty(mdl.d2l_) % empty interpreted as id
-                yh_v = yh_v*mdl.d2l_;
+                yh_v_H = yh_v*mdl.d2l_;
+            else
+                yh_v_H = yh_v;
             end
-            gv = bdiff(mdl, yh_v);
+            n2jv = yh_v_H*yh_v';
+            gv = bdiff(mdl, yh_v_H);
+        end
+        
+        function f = fimdiag(mdl, sample)
+            % Computes the diagonal of the FIM
+            % optionally, approximates it based on a random subsample
+            % of the batch
+            nb = numel(mdl.dl_);
+            if nargin < 2
+                I = 1:nb;
+                w = 1;
+            else
+                I = randperm(nb, sample);
+                w = nb/sample;
+            end
+            np = mdl.paramsize;
+            f = zeros(np,1);
+            for i=I
+                u = zeros(1, nb); u(i) = 1;
+                f = f + w*bdiff(mdl, u).^2;
+            end
         end
         
         function np = get.paramsize(mdl)

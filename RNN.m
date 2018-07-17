@@ -146,21 +146,6 @@ classdef RNN < handle
                              x(:,:,1); 
                              ones(1,nb)]*l_0;
             u_h_p = reshape(u_h_p.', [], 1); 
-%             h_y = rnn.dactivation(h);
-%             hprev = cat(3, rnn.h0_, h);
-%             hx1 = [hprev(:,:,1:end-1); x; ones(1,nb,nt)];    % re-compute hidden-states
-%             h_y = rnn.dactivation(hprev(:,:,2:end));         % pre-compute dactivations
-%             
-%             % pre-alocate ouputs
-%             l_0 = h_y(:,:,end).*u_end;
-%             u_h_p = l_0*hx1(:,:,end)';
-%             for i=nt-1:-1:1
-%                 l_0 = rnn.Wh'*l_0;
-%                 l_0 = h_y(:,:,i).*l_0;
-%                 u_h_p = u_h_p + l_0*hx1(:,:,i)';
-%             end
-%             
-%             u_h_p = u_h_p(:);
         end
         
 %         function [u_h_p] = bdiff(rnn, u)
