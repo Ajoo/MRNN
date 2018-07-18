@@ -103,11 +103,12 @@ end
 if existM2
     z = M2\z;
 end
+p = z;
 rz = r'*z;
-normr = sqrt(rz);
-tolrel = tol * normr;              % Relative tolerance
+normr0 = sqrt(rz);
+tolrel = tol * normr0;              % Relative tolerance
 
-if (normr <= tolrel)                 % Initial guess is a good enough solution
+if (normr0 <= tolrel)                 % Initial guess is a good enough solution
     flag = 0;
     relres = 1;
     iter = 0;
@@ -115,16 +116,18 @@ if (normr <= tolrel)                 % Initial guess is a good enough solution
     return
 end
 
-resvec = zeros(maxit+1,1);         % Preallocate vector for norm of residuals
-resvec(1,:) = normr;                  % resvec(1) = norm(b-A*x0)
+resvec = zeros(maxit,1);         % Preallocate vector for norm of residuals
+resvec(1,:) = normr0;                  % resvec(1) = norm(b-A*x0)
 
+normr = normr0;
 % loop over maxit iterations (unless convergence or failure)
 for ii = 1:maxit
     [q, pq] = A(p,varargin{:});
     % if pq < 0 negative curvature was found
     alpha = rz/pq;
-    x = x + alpha * p;             % form new iterate
     
+    % UPDATE X
+    x = x + alpha * p;             % form new iterate
     % check if x reached max norm
     if existM2
         y = M2*x;
@@ -138,6 +141,7 @@ for ii = 1:maxit
     overstep = xy - maxnorm2;
     if overstep > 0
         flag = 5;
+        % backtrack
         py = p'*y;
         if existM2
             d = M2*p;
@@ -149,81 +153,40 @@ for ii = 1:maxit
         end
         pd = p'*d;
         tau = (py - sqrt(py^2 - overstep*pd))/pd;
-        break
+        x = x - tau*p;
+        break;
     end
     
+    % UPDATE R
+    r = r - alpha*q;                    % TODO: preiodically compute full residual
     if existM1
-        y = M1\r;
-        if ~all(isfinite(y))
-            flag = 2;
-            break
-        end
-    else % no preconditioner
-        y = r;
-    end
-    
-    if existM2
-        z = M2\y;
-        if ~all(isfinite(z))
-            flag = 2;
-            break
-        end
-    else % no preconditioner
-        z = y;
-    end
-    
-    rho1 = rho;
-    rho = r' * z;
-    if ((rho == 0) || isinf(rho))
-        flag = 4;
-        break
-    end
-    if (ii == 1)
-        p = z;
+        z = M1\r;
     else
-        beta = rho / rho1;
-        if ((beta == 0) || isinf(beta))
-            flag = 4;
-            break
-        end
-        p = z + beta * p;
+        z = r;
     end
-    q = A(p,varargin{:});
-    pq = p' * q;
-    alpha = rho / pq;
-    
-    x = x + alpha * p;             % form new iterate
-    normx = norm(x);
-    if normx >= maxnorm
+    if existM2
+        z = M2\z;
+    end
+    rz1 = rz;
+    rz = r'*z;
+    normr = sqrt(rz);
+    resvec(ii,1) = normr;
+    if (normr <= tolrel)                % Initial guess is a good enough solution
         flag = 0;
-        return
+        break;
     end
-    r = r - alpha * q;
-    normr = norm(r);
-    normr_act = normr;
-    resvec(ii+1,1) = normr;
     
-    % check for convergence
-    if (normr <= tolb)
-        r = b - iterapp('mtimes',afun,atype,afcnstr,x,varargin{:});
-        normr_act = norm(r);
-        resvec(ii+1,1) = normr_act;
-        flag = 0;
-        iter = ii;
-    end
-    if (normr_act < normrmin)      % update minimal norm quantities
-        normrmin = normr_act;
-        xmin = x;
-        imin = ii;
-    end
+    beta = rz / rz1;
+    p = z + beta * p;
 end                                % for ii = 1 : maxit
 
+iter = ii;
 % returned solution is first with minimal residual
-relres = normr_act / n2b;
+relres = normr / normr0;
 
 % truncate the zeros from resvec
-if ((flag <= 1) || (flag == 3))
-    resvec = resvec(1:ii+1,:);
-else
+if flag <= 1
     resvec = resvec(1:ii,:);
+else
+    resvec = resvec(1:ii-1,:);
 end

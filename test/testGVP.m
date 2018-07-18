@@ -12,11 +12,6 @@ y = sum(sum(x,3),1);
 
 %%
 [yh, l] = call(mdl, x, y);
-f = zeros(np,1);
-for i=1:nb
-    u = zeros(1, nb); u(i) = 1;
-    f = f + bdiff(mdl, u).^2;
-end
 f2 = fimdiag(mdl);
 
 % from full Gauss-Newton Matrix
@@ -26,4 +21,9 @@ for i=1:np
     [G(:,i), g(i)] = gvp(mdl, G(:,i));
 end
 
-[f2, f, diag(G)]
+[f2, g, diag(G)]
+%%
+b = -bdiff(mdl, [], 1);
+
+[step, flag, relres, iter, resvec] = cpcg(@(v) gvp(mdl, v), b, 1e-5, 1000, [], [], Inf);
+fullstep = G\b;
