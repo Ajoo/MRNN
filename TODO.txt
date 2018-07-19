@@ -2,3 +2,7 @@
  using only matlab's pcg
 - Write more efficient way to compute full bdiff 
   for entire batch or a subsample of it
+- Rework PCG optimizer models to have options as properties
+- Add (M)SGD implementation. Test whether non-generalization fenomena works
+ the same for 1st order methods across diff. batch sizes and seq. sizes
+  * if yes, try to isolate the issue. see if it's consequence of step rejection first
