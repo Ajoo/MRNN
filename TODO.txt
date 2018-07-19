@@ -1,6 +1,4 @@
-- Write norm constrained version of pcg to implement CG steinhaug
 - Possibly implement other thrust region approaches (like iterative)
  using only matlab's pcg
 - Write more efficient way to compute full bdiff 
   for entire batch or a subsample of it
-- output norm(G^0.5*v) from gvp for more numerically conditioned computation

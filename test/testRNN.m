@@ -11,7 +11,7 @@ h_end_v = fdiff(rnn, v);
 e = 1e-4;
 p0 = rnn.params;
 rnn.params = p0 + e*v;
-[h_end_ve] = call(rnn, x);
+[h_end_ve] = evaluate(rnn, x);
 rnn.params = p0;
 h_end_ve = (h_end_ve - h_end)/e;
 

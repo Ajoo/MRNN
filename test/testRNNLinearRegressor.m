@@ -27,8 +27,9 @@ gv = gvp(mdl, v);
 p = mdl.params;
 e = 1e-4;
 mdl.params = p + v*e;
-l_ve = call(mdl, x, y);
+l_ve = evaluate(mdl, x, y);
+mdl.params = p;
 
 l_ve = (l_ve - l)/e;
 
-disp([l_v, l_ve])
+disp([l_v; l_ve])

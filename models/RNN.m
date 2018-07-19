@@ -44,13 +44,7 @@ classdef RNN < handle
             end
         end
         
-        function [h_end, h] = recall(rnn)
-            [h_end, h] = call(rnn, rnn.x_, rnn.h0_);
-        end
-        
-        function [h_end, h] = call(rnn, x, h0)
-            
-            % side-effect: store hidden state vs time in internal buffer
+        function [h_end, h, h0] = evaluate(rnn, x, h0)
             nh = rnn.hiddensize;
             sb = cell(1, ndims(x)-2);
             [nx, sb{:}, nt] = size(x);
@@ -75,10 +69,20 @@ classdef RNN < handle
             if ~isempty(sb)
                 h_end = reshape(h_end, nh, sb{:});
             end
+            
+        end
+        
+        function [h_end, h] = call(rnn, x, varargin)
+            % side-effect: store hidden state vs time in internal buffer
+            [h_end, h, h0] = evaluate(rnn, x, varargin{:});
             rnn.h0_ = h0;
             rnn.h_ = h;
             rnn.x_ = x;
-            rnn.batchsize = sb;
+            rnn.batchsize = size(h,2);
+        end
+        
+        function [h_end, h] = recall(rnn)
+            [h_end, h] = call(rnn, rnn.x_, rnn.h0_);
         end
         
         function [h_end_v, h_v] = fdiff(rnn, v)
@@ -130,8 +134,6 @@ classdef RNN < handle
             % TODO: might want to store these to save computation time
             %       or do these in for loop instead of vectorized to save
             %       memory
-            
-%             h_y = rnn.dactivation(permute(h, [2,1,3]));
             h_y = rnn.dactivation(h);
             l_0 = (h_y(:,:,end).*u_end).';
             u_h_p = zeros(nh+nx+1, nh);
@@ -147,7 +149,38 @@ classdef RNN < handle
                              ones(1,nb)]*l_0;
             u_h_p = reshape(u_h_p.', [], 1); 
         end
-        
+
+        function [u_h_p] = Bdiff(rnn, u_end)
+            % compute derivative of <u, h> w.r.t. params
+            
+            % retrieve buffers
+            x = rnn.x_;
+            h = rnn.h_;
+            % compute sizes
+            nh = rnn.hiddensize;
+            nx = rnn.inputsize;
+            sb = rnn.batchsize;
+            [~, nb, nt] = size(h); % check ~ same as nx
+            np = rnn.paramsize;
+            % TODO: might want to store these to save computation time
+            %       or do these in for loop instead of vectorized to save
+            %       memory
+            h_y = rnn.dactivation(h);
+            l_0 = (h_y(:,:,end).*u_end).';
+            u_h_p = zeros(nh+nx+1, nh);
+            for i=nt-1:-1:1
+                u_h_p = u_h_p + [h(:,:,i); 
+                                 x(:,:,i+1); 
+                                 ones(1,nb)]*l_0;
+                l_0 = l_0*rnn.Wh;
+                l_0 = l_0.*h_y(:,:,i).';
+            end
+            u_h_p = u_h_p + [rnn.h0_; 
+                             x(:,:,1); 
+                             ones(1,nb)]*l_0;
+            u_h_p = reshape(u_h_p.', [], 1); 
+        end
+
 %         function [u_h_p] = bdiff(rnn, u)
 %             compute derivative of <u, h> w.r.t. params
 %             
