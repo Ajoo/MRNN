@@ -46,12 +46,6 @@ classdef PCGOptimizer < handle
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             g = bdiff(opt.model, [], 1);
-            ng = norm(g);
-            if isnumeric(opt.options.RelTol)
-                tol = opt.options.RelTol;
-            else
-                tol = opt.options.RelTol(ng);
-            end
             
             damping = opt.state.damping;
             preconditioner = opt.options.Preconditioner;
@@ -60,6 +54,20 @@ classdef PCGOptimizer < handle
                 minv = (preconditioner(opt.model) + damping).^-alpha;
                 preconditioner = @(x) minv.*x;
             end
+            
+            
+            if isnumeric(opt.options.RelTol)
+                tol = opt.options.RelTol;
+            else
+                if ~isempty(preconditioner)
+                    ng = sqrt(g'*preconditioner(g));
+                else
+                    ng = norm(g);
+                end
+                tol = opt.options.RelTol(ng);
+            end
+            
+            
             if opt.options.HotRestart
                 x0 = opt.state.previousstep;
             else
