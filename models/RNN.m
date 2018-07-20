@@ -69,7 +69,6 @@ classdef RNN < handle
             if ~isempty(sb)
                 h_end = reshape(h_end, nh, sb{:});
             end
-            
         end
         
         function [h_end, h] = call(rnn, x, varargin)
