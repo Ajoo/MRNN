@@ -8,7 +8,8 @@ p0 = mdl.params;
 
 fimdiag = @(mdl) fimdiag(mdl, 100);
 
-opt = ADAMOptimizer(mdl);
+opt = ADAMOptimizer(mdl, 2e-3);
+% opt = SGDOptimizer(mdl, 1e-3, 'momentum', 0.6);
 %%
 
 %%
@@ -28,7 +29,8 @@ for i=i:i+N
     [~, loss(i)] = recall(mdl);
     if mod(i, DECIMATION) == 0
         [~, valloss(end+1)] = evaluate(mdl, xval, yval);
-        disp([i, 2*loss(i)/BATCH_SIZE, 2*valloss(end)/BATCH_SIZE])
+        fprintf('Iter: %i, Train Error: %1.4f, Val Error: %1.4f\n', ...
+            i, 2*loss(i)/BATCH_SIZE, 2*valloss(end)/BATCH_SIZE);
     end
 end
 % disp(['loss: ', num2str(2*l/BATCH_SIZE)])
@@ -36,6 +38,8 @@ end
 % disp(['iter: ', num2str(iter)])
 % disp(['damping: ', num2str(opt.state.damping)])
 % disp(['step size: ', num2str(norm(opt.state.previousstep))])
+
+
 %%
 plot(2*loss/BATCH_SIZE);
 hold on;
