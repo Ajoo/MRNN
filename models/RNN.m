@@ -95,10 +95,7 @@ classdef RNN < handle
             sb = rnn.batchsize;
             [nx, nb, nt] = size(x);
             % pre-alocate ouputs
-            fullseq = nargout >= 2;
-            if fullseq
-                h_v = zeros(nx, nb, nt);
-            end            
+            fullseq = nargout >= 2;           
             % TODO: might want to store these to save computation time
             %       or do these in for loop instead of vectorized to save
             %       memory
@@ -106,6 +103,11 @@ classdef RNN < handle
             v = reshape(v, nh, []);
             
             h_end_v = v(:,1:nh)*rnn.h0_ + v(:,nh+1:nh+nx)*x(:,:,1) + v(:,nh+nx+1);
+            h_end_v = h_y(:,:,1).*h_end_v;
+            if fullseq
+                h_v = zeros(nh, nb, nt);
+                h_v(:,:,1) = h_end_v;
+            end 
             for i=2:nt
                 h_end_v = rnn.Wh*h_end_v + v(:,1:nh)*h(:,:,i-1) + ...
                                            v(:,nh+1:nh+nx)*x(:,:,i)+...
@@ -116,9 +118,8 @@ classdef RNN < handle
                 end
             end
         end
-        % TODO: handle case where u is only size [nh, nb] assuming 
-        % u(:,:,i) = 0 for i ~= nt
-        function [u_h_p] = bdiff(rnn, u_end)
+
+        function [u_h_p] = bdiff(rnn, u_end, u)
             % compute derivative of <u, h> w.r.t. params
             
             % retrieve buffers
@@ -129,7 +130,48 @@ classdef RNN < handle
             nx = rnn.inputsize;
             sb = rnn.batchsize;
             [~, nb, nt] = size(h); % check ~ same as nx
-            np = rnn.paramsize;
+            fullseq = (nargin >= 3) && ~isempty(u);
+            if fullseq
+                u_end = u_end + u(:,:,end);
+            end
+            % TODO: might want to store these to save computation time
+            %       or do these in for loop instead of vectorized to save
+            %       memory
+            h_y = rnn.dactivation(h);
+            
+            l_0 = (h_y(:,:,end).*u_end).';
+            u_h_p = zeros(nh+nx+1, nh);
+            for i=nt-1:-1:1
+                u_h_p = u_h_p + [h(:,:,i); 
+                                 x(:,:,i+1); 
+                                 ones(1,nb)]*l_0;
+                l_0 = l_0*rnn.Wh;
+                if fullseq
+                    l_0 = l_0 + u(:,:,i).';
+                end
+                l_0 = l_0.*h_y(:,:,i).';
+            end
+            u_h_p = u_h_p + [rnn.h0_; 
+                             x(:,:,1); 
+                             ones(1,nb)]*l_0;
+            u_h_p = reshape(u_h_p.', [], 1); 
+        end
+        
+        function [u_h_p] = Bdiff(rnn, u_end, u)
+            % compute derivative of <u, h> w.r.t. params
+            
+            % retrieve buffers
+            x = rnn.x_;
+            h = rnn.h_;
+            % compute sizes
+            nh = rnn.hiddensize;
+            nx = rnn.inputsize;
+            sb = rnn.batchsize;
+            [~, nb, nt] = size(h); % check ~ same as nx
+            fullseq = (nargin >= 3) && ~isempty(u);
+            if fullseq
+                u_end = u_end + u(:,:,end);
+            end
             % TODO: might want to store these to save computation time
             %       or do these in for loop instead of vectorized to save
             %       memory
@@ -141,6 +183,9 @@ classdef RNN < handle
                                  x(:,:,i+1); 
                                  ones(1,nb)]*l_0;
                 l_0 = l_0*rnn.Wh;
+                if fullseq
+                    l_0 = l_0 + u(:,:,i);
+                end
                 l_0 = l_0.*h_y(:,:,i).';
             end
             u_h_p = u_h_p + [rnn.h0_; 
@@ -148,65 +193,6 @@ classdef RNN < handle
                              ones(1,nb)]*l_0;
             u_h_p = reshape(u_h_p.', [], 1); 
         end
-
-        function [u_h_p] = Bdiff(rnn, u_end)
-            % compute derivative of <u, h> w.r.t. params
-            
-            % retrieve buffers
-            x = rnn.x_;
-            h = rnn.h_;
-            % compute sizes
-            nh = rnn.hiddensize;
-            nx = rnn.inputsize;
-            sb = rnn.batchsize;
-            [~, nb, nt] = size(h); % check ~ same as nx
-            np = rnn.paramsize;
-            % TODO: might want to store these to save computation time
-            %       or do these in for loop instead of vectorized to save
-            %       memory
-            h_y = rnn.dactivation(h);
-            l_0 = (h_y(:,:,end).*u_end).';
-            u_h_p = zeros(nh+nx+1, nh);
-            for i=nt-1:-1:1
-                u_h_p = u_h_p + [h(:,:,i); 
-                                 x(:,:,i+1); 
-                                 ones(1,nb)]*l_0;
-                l_0 = l_0*rnn.Wh;
-                l_0 = l_0.*h_y(:,:,i).';
-            end
-            u_h_p = u_h_p + [rnn.h0_; 
-                             x(:,:,1); 
-                             ones(1,nb)]*l_0;
-            u_h_p = reshape(u_h_p.', [], 1); 
-        end
-
-%         function [u_h_p] = bdiff(rnn, u)
-%             compute derivative of <u, h> w.r.t. params
-%             
-%             retrieve buffers
-%             x = rnn.x_;
-%             y = rnn.y_;
-%             compute sizes
-%             nh = rnn.hiddensize;
-%             nx = rnn.inputsize;
-%             sb = rnn.batchsize;
-%             [~, nb, nt] = size(y); % check ~ same as nx
-%             np = rnn.paramsize;
-%             pre-alocate ouputs
-%             l_0 = zeros(nh, nb);
-%             u_h_p = zeros(nh, nh+nx+1);
-%             TODO: might want to rework this to save memory...
-%             hprev = cat(3, rnn.h0_, rnn.activation(y));
-%             hx1 = [hprev(:,:,1:end-1); x; ones(1,nb,nt)];    % re-compute hidden-states
-%             h_y = rnn.dactivation(hprev(:,:,2:end));         % pre-compute dactivations
-%             for i=nt:-1:1
-%                 l_0 = rnn.Wh'*l_0 + u(:,:,i);
-%                 l_0 = h_y(:,:,i).*l_0;
-%                 u_h_p = u_h_p + l_0*hx1(:,:,i)';
-%             end
-%             
-%             u_h_p = u_h_p(:);
-%         end
         
         function set.params(rnn, p)
             nh = rnn.hiddensize;
