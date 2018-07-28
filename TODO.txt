@@ -1,7 +1,12 @@
-- Make RNNRegressor that computes loss for a hole seq. output
 - Write more efficient way to compute bdiff 
   for entire batch separately or a subsample of it
+  preferably in parallel
 - Rework PCG optimizer models to have options as properties
 - Test whether non-generalization fenomena works
  the same for 1st order methods across diff. batch sizes and seq. sizes
   * if yes, try to isolate the issue. see if it's consequence of step rejection first
+- Find good heuristics for preconditioning based on previous iteration ranges
+- Possible preconditioners:
+   . FIM diagonal for full or partial batch
+   . FIM of previous batch
+   . ADAM diagonal

@@ -1,16 +1,13 @@
 T = 30;
-BATCH_SIZE = 100;
+BATCH_SIZE = 1000;
 HIDDEN_SIZE = 100;
 
 rnn = RNN(2, HIDDEN_SIZE);
 mdl = RNNLinearRegressor(rnn);
 p0 = mdl.params;
 
-fimdiag = @(mdl) fimdiag(mdl, 100);
-
 opt = ADAMOptimizer(mdl, 2e-3);
 % opt = SGDOptimizer(mdl, 1e-3, 'momentum', 0.6);
-%%
 
 %%
 [x, y] = sampleaddition(BATCH_SIZE, T);
