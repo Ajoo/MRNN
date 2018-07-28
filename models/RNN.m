@@ -9,7 +9,7 @@ classdef RNN < handle
         activation
         dactivation
     end
-    properties (Access=private)
+    properties %(Access=private)
         batchsize
         h0_
         h_ % store pre-activations
@@ -53,7 +53,7 @@ classdef RNN < handle
             assert(nx == rnn.inputsize, 'RNN:wrongSize', 'Input size incorrect.')
             x = reshape(x, nx, nb, nt);
             
-            if nargin < 3
+            if nargin < 3 || isempty(h0)
                 h0 = zeros(nh, nb);
             end
 
