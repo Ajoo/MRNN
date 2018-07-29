@@ -10,3 +10,4 @@
    . FIM diagonal for full or partial batch
    . FIM of previous batch
    . ADAM diagonal
+- IndRNN
