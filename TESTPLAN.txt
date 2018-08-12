@@ -1,0 +1,19 @@
+Test two extremes and middle ground of the conservative subproblem approach:
+
+- One step per batch (parameter update) either by SGD/first-order-variant
+  or Second-order method. Step acceptence might already be important for 
+  deep/recurrent models
+
+- Middle-ground: Multiple steps of first or second order method per batch
+  (batch persistence). Modifications to SGD with step acceptance parameter 
+  start being more relevant in this regime
+
+- Full optimization for each batch, cumulative averaging over batches
+
+spectrum should go:
+
+Time (computation) efficient <----> Data efficient
+       L = 1                           L = oo
+
+What methods perform better at what points in the spectrum?
+Can second order methods @ L = oo outperform first order @ L = 0
