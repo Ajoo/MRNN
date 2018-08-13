@@ -1,9 +1,9 @@
-nx = 1;
-nh = 1;
-nb = 1;
+nx = 2;
+nh = 10;
+nb = 30;
 nt = 100;
 rnn = RNN(nx,nh, 'tanh');
-np = rnn.paramsize;
+%rnn = IndRNN(nx, nh, sqrt(2)*nt, 'tanh');
 x = randn(nx, nb, nt);
 [h_end, h] = call(rnn, x);
 
@@ -27,8 +27,8 @@ assert(max(max(max(abs(h_v-h_ve)))) < 10*e, 'fdiff result doesn''t match finite 
 %%
 np = rnn.paramsize;
 ih = 1; 
-ib = 1;
-it = 4;
+ib = 2;
+it = 100;
 
 u = zeros(size(h));
 u_end = zeros(size(h_end));

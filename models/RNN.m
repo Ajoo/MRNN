@@ -27,10 +27,6 @@ classdef RNN < handle
             if nargin < 3
                 activation = 'tanh';
             end
-            stddev = 1/sqrt(hiddensize);
-            rnn.Wh = (2*rand(hiddensize)-1)*stddev;
-            rnn.Wx = (2*rand(hiddensize, inputsize)-1)*stddev;
-            rnn.b = (2*randn(hiddensize,1)-1)*stddev;
             switch upper(activation)
                 case 'TANH'
                     rnn.activation = @tanh;
@@ -42,6 +38,13 @@ classdef RNN < handle
                     rnn.activation = @(x) x;
                     rnn.dactivation = @(z) ones(size(z));
             end
+            initialize(rnn, inputsize, hiddensize);
+        end
+        function initialize(rnn, inputsize, hiddensize)
+            stddev = 1/sqrt(hiddensize);
+            rnn.Wh = (2*rand(hiddensize)-1)*stddev;
+            rnn.Wx = (2*rand(hiddensize, inputsize)-1)*stddev;
+            rnn.b = (2*randn(hiddensize,1)-1)*stddev;
         end
         
         function [h_end, h, h0] = evaluate(rnn, x, h0)
@@ -92,26 +95,26 @@ classdef RNN < handle
             h = rnn.h_;
             % compute sizes
             nh = rnn.hiddensize;
-            sb = rnn.batchsize;
-            [nx, nb, nt] = size(x);
+            % sb = rnn.batchsize;
+            [~, nb, nt] = size(x);
             % pre-alocate ouputs
             fullseq = nargout >= 2;           
             % TODO: might want to store these to save computation time
             %       or do these in for loop instead of vectorized to save
             %       memory
             h_y = rnn.dactivation(h);   % pre-compute dactivations
-            v = reshape(v, nh, []);
-            
-            h_end_v = v(:,1:nh)*rnn.h0_ + v(:,nh+1:nh+nx)*x(:,:,1) + v(:,nh+nx+1);
+            [Vh, Vx, vb] = getweights(rnn, v);
+
+            h_end_v = Vh*rnn.h0_ + Vx*x(:,:,1) + vb;
             h_end_v = h_y(:,:,1).*h_end_v;
             if fullseq
                 h_v = zeros(nh, nb, nt);
                 h_v(:,:,1) = h_end_v;
             end 
             for i=2:nt
-                h_end_v = rnn.Wh*h_end_v + v(:,1:nh)*h(:,:,i-1) + ...
-                                           v(:,nh+1:nh+nx)*x(:,:,i)+...
-                                           v(:,nh+nx+1);
+                h_end_v = rnn.Wh*h_end_v + Vh*h(:,:,i-1) + ...
+                                           Vx*x(:,:,i)+...
+                                           vb;
                 h_end_v = h_y(:,:,i).*h_end_v;
                 if fullseq
                     h_v(:,:,i) = h_end_v;
@@ -154,7 +157,7 @@ classdef RNN < handle
             u_h_p = u_h_p + [rnn.h0_; 
                              x(:,:,1); 
                              ones(1,nb)]*l_0;
-            u_h_p = reshape(u_h_p.', [], 1); 
+            u_h_p = vecweights(rnn, u_h_p.'); 
         end
         
         function [u_h_p] = Bdiff(rnn, u_end, u)
@@ -194,15 +197,39 @@ classdef RNN < handle
             u_h_p = reshape(u_h_p.', [], 1); 
         end
         
-        function set.params(rnn, p)
+        function [Vh, Vx, vb] = getweights(rnn, v)
             nh = rnn.hiddensize;
             nx = rnn.inputsize;
-            rnn.Wh(:) = p(1:nh^2);
-            rnn.Wx(:) = p(nh^2+1:nh^2+nh*nx);
-            rnn.b(:) = p(nh*(nh+nx)+1:nh*(nh+nx+1));
+            V = reshape(v, nh, []);
+            Vh = V(:,1:nh);
+            Vx = V(:,nh+1:nh+nx);
+            vb = V(:,nh+nx+1);
+        end
+        function p = set_params_hook(rnn, p)
+            % introduce modifications to p prior to assignment
+        end
+        function set.params(rnn, p)
+            p = set_params_hook(rnn, p);
+            [rnn.Wh, rnn.Wx, rnn.b] = getweights(rnn, p);
+        end
+%         function set.params(rnn, p)
+%             nh = rnn.hiddensize;
+%             nx = rnn.inputsize;
+%             rnn.Wh(:) = p(1:nh^2);
+%             rnn.Wx(:) = p(nh^2+1:nh^2+nh*nx);
+%             rnn.b(:) = p(nh*(nh+nx)+1:nh*(nh+nx+1));
+%         end
+
+        function v = vecweights(rnn, V)
+            if nargin == 1
+                v = [rnn.Wh(:); rnn.Wx(:); rnn.b];
+            else
+                v = V(:);
+            end
         end
         function p = get.params(rnn)
-            p = [rnn.Wh(:); rnn.Wx(:); rnn.b];
+            %p = [rnn.Wh(:); rnn.Wx(:); rnn.b];
+            p = vecweights(rnn);
         end
         function nh = get.hiddensize(rnn)
             nh = size(rnn.Wh, 1);
@@ -210,10 +237,13 @@ classdef RNN < handle
         function nx = get.inputsize(rnn)
             nx = size(rnn.Wx, 2);
         end
-        function np = get.paramsize(rnn)
+        function np = getparamsize(rnn)
             nh = rnn.hiddensize;
             nx = rnn.inputsize;
-            np = nh*(nh+nx+1);
+            np = nh*(nh+nx+1);            
+        end
+        function np = get.paramsize(rnn)
+            np = getparamsize(rnn);
         end
     end
     
