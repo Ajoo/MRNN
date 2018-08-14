@@ -1,6 +1,14 @@
 T = 100;
 BATCH_SIZE = 100;
 HIDDEN_SIZE = 100;
+NCOPY = 5;
+NSYMBOLS = 2;
+
+% samplebatch = @() sampleaddition(BATCH_SIZE, T);
+samplebatch = @() samplecopy(NSYMBOLS, NCOPY, BATCH_SIZE, T-NCOPY);
+
+[x, y] = samplebatch();
+[xval, yval] = samplebatch();
 
 rnn = RNN(2, HIDDEN_SIZE);
 mdl = RNNLinearRegressor(rnn);
@@ -18,9 +26,7 @@ opt.options.Preconditioner = [];
 opt.options.RelTol = 1e-5;
 opt.options.MaxIter = 100;
 opt.options.RejectionThreshold = 0;
-%%
-[x, y] = sampleaddition(BATCH_SIZE, T);
-[xval, yval] = sampleaddition(BATCH_SIZE, T);
+
 %%
 [~, l] = call(mdl, x, y);
 [~, valloss] = evaluate(mdl, xval, yval);
