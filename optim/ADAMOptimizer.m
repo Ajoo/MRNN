@@ -30,6 +30,12 @@ classdef ADAMOptimizer < handle
             end
         end
         
+        function reset(opt)
+            opt.m = 0;
+            opt.v = 0;
+            opt.t = 0;
+        end
+        
         function step(opt)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here

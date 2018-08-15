@@ -122,7 +122,7 @@ classdef RNNLinearClassifier < handle
             if nargin < 2 || isempty(u)
                 u = zeros(size(mdl.dl_));
             end
-            if nargin >= 3
+            if nargin >= 3 && ~isempty(ul)
             	u = u + ul*mdl.dl_;
             end
             if mdl.fullseq

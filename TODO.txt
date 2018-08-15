@@ -10,3 +10,6 @@
    . FIM diagonal for full or partial batch
    . FIM of previous batch
    . ADAM diagonal
+- Generalize LinearRegressor to handle multiple outputs (like LogisticRegressor)
+
+- Rewrite PCGOptimizer to use RegularizedModel(mdl)

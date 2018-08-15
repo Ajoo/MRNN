@@ -7,6 +7,8 @@ fullseq = true;
 
 rnn = RNN(nx, nh, 'tanh');
 mdl = RNNLinearClassifier(rnn, nk, [], fullseq);
+mdl = RegularizedModel(mdl, 1);
+mdl.pparams = zeros(mdl.paramsize,1);
 
 x = randn(nx,nb,nt);
 [~, i] = max(randn(nk,nb,nt), [], 1);

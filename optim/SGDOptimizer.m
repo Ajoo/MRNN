@@ -12,8 +12,6 @@ classdef SGDOptimizer < handle
     end
     properties (Access=private) % algorithm state
         m = 0;
-        v = 0;
-        t = 0;
     end
     
     methods
@@ -27,6 +25,10 @@ classdef SGDOptimizer < handle
             for i=1:2:numel(varargin)
                 opt.(varargin{i}) = varargin{i+1};
             end
+        end
+        
+        function reset(opt)
+            opt.m = 0;
         end
         
         function step(opt)

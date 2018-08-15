@@ -31,6 +31,10 @@ classdef PCGSteinhaugOptimizer < handle
             end       
         end
         
+        function reset(opt)
+            
+        end
+        
         function accept = update(opt, reductionratio, maxstep)
             
             thrustradius = opt.state.thrustradius;

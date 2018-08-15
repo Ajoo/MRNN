@@ -1,10 +1,11 @@
 T = 100;
 BATCH_SIZE = 100;
 HIDDEN_SIZE = 100;
-NCOPY = 5;
-NSYMBOLS = 2;
 
 % samplebatch = @() sampleaddition(BATCH_SIZE, T);
+
+NCOPY = 5;
+NSYMBOLS = 2;
 samplebatch = @() samplecopy(NSYMBOLS, NCOPY, BATCH_SIZE, T-NCOPY);
 
 [x, y] = samplebatch();
@@ -14,7 +15,7 @@ rnn = RNN(2, HIDDEN_SIZE);
 mdl = RNNLinearRegressor(rnn);
 p0 = mdl.params;
 
-fimdiag = @(mdl) fimdiag(mdl, 100);
+%fimdiag = @(mdl) fimdiag(mdl, 100);
 
 opt = PCGSteinhaugOptimizer(mdl, 1);
 %%
