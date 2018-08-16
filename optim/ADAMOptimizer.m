@@ -12,6 +12,8 @@ classdef ADAMOptimizer < handle
         weightdecay = 0;
         % acceptence test
         accept = false;
+        lr_increase = 1;
+        lr_decrease = 1;
     end
     properties (Access=private) % algorithm state
         m = 0;
@@ -71,16 +73,17 @@ classdef ADAMOptimizer < handle
                 [~, newloss] = recall(opt.model);
                 if ~update(opt, newloss-loss)
                     opt.model.params = opt.model.params - step;
+                    newloss = loss;
                 end
             end
         end
         
         function accept = update(opt, dloss)
             accept = dloss <= 0;
-            if ~accept
-                opt.lr = opt.lr/2;
+            if accept
+                opt.lr = opt.lr*opt.lr_increase;
             else
-                opt.lr = opt.lr*2^(1/10);
+                opt.lr = opt.lr*opt.lr_decrease;
             end
         end
     end
