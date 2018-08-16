@@ -9,6 +9,7 @@ classdef SGDOptimizer < handle
         damping = 0;
         nesterov = true;
         l2 = 0; % regularization
+        accept = false; % do acceptence test
     end
     properties (Access=private) % algorithm state
         m = 0;
@@ -31,7 +32,7 @@ classdef SGDOptimizer < handle
             opt.m = 0;
         end
         
-        function step(opt)
+        function newloss = step(opt, loss)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             lr_ = opt.lr;
@@ -53,6 +54,23 @@ classdef SGDOptimizer < handle
                 end
             end
             opt.model.params = opt.model.params - lr_*g;
+            
+            newloss = loss;
+            if opt.accept
+                [~, newloss] = recall(opt.model);
+                if ~update(opt, newloss-loss)
+                    opt.model.params = opt.model.params + lr_*g;
+                end
+            end
+        end
+        
+        function accept = update(opt, dloss)
+            accept = dloss <= 0;
+            if ~accept
+                opt.lr = opt.lr/2;
+            else
+                opt.lr = opt.lr*2^(1/10);
+            end
         end
     end
 end

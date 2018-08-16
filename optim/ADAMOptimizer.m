@@ -10,6 +10,8 @@ classdef ADAMOptimizer < handle
         % regularization
         l2 = 0;
         weightdecay = 0;
+        % acceptence test
+        accept = false;
     end
     properties (Access=private) % algorithm state
         m = 0;
@@ -36,7 +38,7 @@ classdef ADAMOptimizer < handle
             opt.t = 0;
         end
         
-        function step(opt)
+        function newloss = step(opt, loss)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             lr_ = opt.lr;
@@ -61,8 +63,25 @@ classdef ADAMOptimizer < handle
             if weightdecay_ > 0
                 opt.model.params = (1-lr_*weightdecay_)*opt.model.params;
             end
-            opt.model.params = opt.model.params ...
-                -alpha*opt.m./(sqrt(opt.v) + eps_);
+            step = -alpha*opt.m./(sqrt(opt.v) + eps_);
+            opt.model.params = opt.model.params + step;
+            
+            newloss = loss;
+            if opt.accept
+                [~, newloss] = recall(opt.model);
+                if ~update(opt, newloss-loss)
+                    opt.model.params = opt.model.params - step;
+                end
+            end
+        end
+        
+        function accept = update(opt, dloss)
+            accept = dloss <= 0;
+            if ~accept
+                opt.lr = opt.lr/2;
+            else
+                opt.lr = opt.lr*2^(1/10);
+            end
         end
     end
 end
