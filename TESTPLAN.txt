@@ -17,3 +17,7 @@ Time (computation) efficient <----> Data efficient
 
 What methods perform better at what points in the spectrum?
 Can second order methods @ L = oo outperform first order @ L = 0
+
+BATCH_SIZE plays a huge role for the deterministic setting
+there seems to be a marginal value after which training on a single batch is valuable
+and won't overfit

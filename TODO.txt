@@ -13,3 +13,5 @@
 - Generalize LinearRegressor to handle multiple outputs (like LogisticRegressor)
 
 - Rewrite PCGOptimizer to use RegularizedModel(mdl)
+
+Move optimizer specific debug to an internal log;
