@@ -12,6 +12,7 @@ classdef ADAMOptimizer < handle
         weightdecay = 0;
         % acceptence test
         accept = false;
+        accept_threshold = 0;
         lr_increase = 1;
         lr_decrease = 1;
     end
@@ -38,6 +39,9 @@ classdef ADAMOptimizer < handle
             opt.m = 0;
             opt.v = 0;
             opt.t = 0;
+        end
+        
+        function plot(~)
         end
         
         function newloss = step(opt, loss)
@@ -79,7 +83,7 @@ classdef ADAMOptimizer < handle
         end
         
         function accept = update(opt, dloss)
-            accept = dloss <= 0;
+            accept = dloss <= opt.accept_threshold;
             if accept
                 opt.lr = opt.lr*opt.lr_increase;
             else

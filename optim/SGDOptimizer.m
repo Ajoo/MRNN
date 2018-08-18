@@ -11,7 +11,8 @@ classdef SGDOptimizer < handle
         l2 = 0; % regularization
         
         % acceptence test
-        accept = false; 
+        accept = false;
+        accept_threshold = 0;
         lr_increase = 1;
         lr_decrease = 1;
     end
@@ -70,7 +71,7 @@ classdef SGDOptimizer < handle
         end
         
         function accept = update(opt, dloss)
-            accept = dloss <= 0;
+            accept = dloss <= opt.accept_threshold;
             if accept
                 opt.lr = opt.lr*opt.lr_increase;
             else

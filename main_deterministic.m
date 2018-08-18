@@ -13,15 +13,21 @@ mdl = RNNLinearRegressor(rnn);
 %% optimizer
 
 % CG Steihaug
-opt = PCGSteinhaugOptimizer(mdl, 1);
-alpha = 1;
-opt.options.ThrustRadiusReductionFactor = 0.25;
-opt.options.ThrustRadiusIncreaseFactor = 2;
-opt.options.MaxThrustRadius = Inf;
-opt.options.Preconditioner = [];
-opt.options.RelTol = 1e-5;
-opt.options.MaxIter = 100;
-opt.options.RejectionThreshold = 0;
+% opt = PCGSteinhaugOptimizer(mdl, 1);
+% alpha = 1;
+% opt.thrustradius_decrease = 0.25;
+% opt.thrustradius_increase = 2;
+% opt.thrustradius_max      = Inf;
+% opt.preconditioner        = [];
+% opt.reltol                = 1e-5;
+% opt.maxiter               = 100;
+% opt.rejection_threshold   = 0;
+
+% ADAM
+opt = ADAMOptimizer(mdl, 2e-3);
+opt.accept = true;
+opt.accept_threshold = 0;
+lr_decrease = 1/2;
 
 % (A)SGD
 % opt
@@ -33,25 +39,13 @@ valloss = valloss*2/size(yval, 2);
 [x, y] = samplebatch(BATCH_SIZE);
 [~, l] = call(mdl, x, y);
 %%
-loss = []; rho = []; iter = []; thrustradius = [];
-stepsizes = []; flag = []; relres = [];
-i = 1;
+loss = []; i = 1;
 %%
-N = 100;
-DECIMATION = 10;
-
-loss = [loss; zeros(N,1)];
-rho = [rho; zeros(N,1)];
-iter = [iter; zeros(N,1)];
-thrustradius = [thrustradius; zeros(N,1)];
-stepsizes = [stepsizes; zeros(N,1)];
-flag = [flag; zeros(N,1)];
-relres = [relres; zeros(N,1)];
+N = 1000;
+DECIMATION = 100;
 
 for i=i:i+N
-    [l, rho(i), flag(i), relres(i), iter(i)] =  step(opt, l);
-    stepsizes(i) = norm(opt.state.previousstep);
-    thrustradius(i) = opt.state.thrustradius;
+    l =  step(opt, l);
     loss(i) = 2*l/BATCH_SIZE;
     if mod(i, DECIMATION) == 0
         [~, vl] = evaluate(mdl, xval, yval);
@@ -60,13 +54,7 @@ for i=i:i+N
             i, loss(i), valloss(end));
     end
 end
-
-
 %%
 figure(1); plot(loss), hold on, plot(DECIMATION*(1:numel(valloss)), valloss, '.-')
 
-figure(2); 
-subplot(2,2,1); plot(max(rho,0)), hold on
-subplot(2,2,2); plot(iter), hold on
-subplot(2,2,3); plot(thrustradius), hold on
-subplot(2,2,4); plot(stepsizes)
+figure(2); plot(opt)

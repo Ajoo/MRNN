@@ -1,15 +1,15 @@
 T = 30;
-BATCH_SIZE = 100;
+BATCH_SIZE = 250;
 samplebatch = @(B) sampleaddition(B, T);
 
 HIDDEN_SIZE = 100;
 rnn = RNN(2, HIDDEN_SIZE);
 mdl = RNNLinearRegressor(rnn);
 
-% opt = ADAMOptimizer(mdl, 2e-4); % for T <= 50
+opt = ADAMOptimizer(mdl, 2e-4); % for T <= 50
 % opt = ADAMOptimizer(mdl, 2e-4);
-opt = SGDOptimizer(mdl, 1e-5, 'momentum', 0.9);
-opt.accept = true;
+% opt = SGDOptimizer(mdl, 1e-5, 'momentum', 0.9);
+% opt.accept = true;
 
 i = 1;
 loss = [];
@@ -20,8 +20,9 @@ DECIMATION = 100;
 loss = [loss; zeros(N,1)];
 ploss = [ploss; zeros(N,1)];
 
+[x, y] = samplebatch(BATCH_SIZE);
 for i=i:i+N
-    [x, y] = samplebatch(BATCH_SIZE);
+    % [x, y] = samplebatch(BATCH_SIZE);
     [~, loss(i)] = call(mdl, x, y);
     ploss(i) = step(opt, loss(i));
     loss(i) = loss(i)*2/BATCH_SIZE;

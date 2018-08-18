@@ -4,9 +4,24 @@ classdef PCGSteinhaugOptimizer < handle
     
     properties
         model
-        options
-        state
-        log
+        thrustradius
+        log = Log('loss',...
+                  'newloss',...
+                  'thrustradius',...
+                  'nstep',...
+                  'reductionratio',...
+                  'flag',...
+                  'relres',...
+                  'niter');
+    end
+    properties % options
+        thrustradius_max        = Inf
+        thrustradius_decrease   = 1/4
+        thrustradius_increase   = 2
+        rejection_threshold     = 0
+        reltol                  = 1e-6
+        maxiter                 
+        preconditioner          = []
     end
     
     methods
@@ -14,67 +29,65 @@ classdef PCGSteinhaugOptimizer < handle
             %PCGOPTIMIZER Construct an instance of this class
             %   Detailed explanation goes here
             opt.model = model;
-            opt.state = struct('thrustradius', initialthrustradius,...
-                               'previousstep', zeros(model.paramsize, 1));
+            opt.thrustradius = initialthrustradius;
             
             % default options
-            opt.options = struct('MaxThrustRadius', Inf, ...
-                                 'RejectionThreshold', 0, ...
-                                 'ThrustRadiusReductionFactor', 1/4,...
-                                 'ThrustRadiusIncreaseFactor', 2,...
-                                 'RelTol', 1e-6, ...
-                                 'MaxIter', model.paramsize, ...
-                                 'Preconditioner', []);
-            
+            opt. maxiter = model.paramsize; 
             for i=1:2:numel(varargin)
-                opt.options.(varargin{i}) = varargin{i+1};
-            end       
+                opt.(varargin{i}) = varargin{i+1};
+            end
         end
         
-        function reset(opt)
-            
+        function reset(~) 
         end
         
         function accept = update(opt, reductionratio, maxstep)
-            
-            thrustradius = opt.state.thrustradius;
             if reductionratio < 0.25
-                thrustradius = thrustradius*opt.options.ThrustRadiusReductionFactor;
+                opt.thrustradius = opt.thrustradius*opt.thrustradius_decrease;
             else
                 if reductionratio > 0.75 && maxstep
-                    thrustradius = min(thrustradius*opt.options.ThrustRadiusIncreaseFactor, ...
-                        opt.options.MaxThrustRadius);
+                    opt.thrustradius = opt.thrustradius*opt.thrustradius_increase;
+                    opt.thrustradius = min(opt.thrustradius, opt.thrustradius_max);
                 end
             end
-            opt.state.thrustradius = thrustradius;
-            accept = (reductionratio > opt.options.RejectionThreshold);
+            accept = (reductionratio > opt.rejection_threshold);
         end
         
-        function [newloss, reductionratio, flag, relres, iter] = step(opt, loss)
+        function plot(opt)
+%             figure(1);
+%             plot(getfield(opt.log, 'loss')), hold on
+
+%             figure(2);
+            subplot(2,2,1); plot(max(getfield(opt.log, 'reductionratio'),0)), hold on
+            subplot(2,2,2); plot(getfield(opt.log, 'niter')), hold on
+            subplot(2,2,3); plot(getfield(opt.log, 'thrustradius'), '--'), hold on
+                            plot(getfield(opt.log, 'nstep'))
+            subplot(2,2,4); plot(getfield(opt.log, 'relres')), hold on
+        end
+        
+        function [newloss] = step(opt, loss)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
-            np = opt.model.paramsize;
-            thrustradius = opt.state.thrustradius;
-            M = opt.options.Preconditioner;
+            M = opt.preconditioner;
             if ~isnumeric(M) % M is function handle
                 M = M(opt.model);
             end
             
             g = bdiff(opt.model, [], 1);
-            if isnumeric(opt.options.RelTol)
-                tol = opt.options.RelTol;
+            if isnumeric(opt.reltol)
+                tol = opt.reltol;
             else
                 if ~isempty(M)
                     ng = sqrt(g'*(M\g));
                 else
                     ng = norm(g);
                 end
-                tol = opt.options.RelTol(ng);
+                tol = opt.reltol(ng);
             end
             
             % compute step
-            [step, flag, relres, iter] = cpcg(@(v) gvp(opt.model, v), -g, tol, opt.options.MaxIter, ...
-                M, [], thrustradius);
+            [step, flag, relres, iter] = cpcg(@(v) gvp(opt.model, v), -g, tol, ...
+                opt.maxiter, M, [], opt.thrustradius);
             
             % compute predicted reduction along step
             [~, loss_s] = fdiff(opt.model, step);
@@ -86,18 +99,16 @@ classdef PCGSteinhaugOptimizer < handle
             [~, newloss] = recall(opt.model);
             reductionratio = (newloss-loss)/predchange;
             
+            tr = opt.thrustradius;
             % take back step if not accepted
             if ~update(opt, reductionratio, flag==5)
                 opt.model.params = opt.model.params - step;
                 newloss = loss;
-                opt.state.previousstep = zeros(numel(step),1);
-            else
-                opt.state.previousstep = step;
+                step = zeros(numel(step),1);
             end
                 
-            function gv = gvp_(v)
-                gv = gvp(opt.model, v);
-            end
+            append(opt.log, loss, newloss, tr, norm(step), ...
+                            reductionratio, flag, relres, iter);
         end
     end
 end
