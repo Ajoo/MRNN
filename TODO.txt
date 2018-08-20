@@ -1,7 +1,6 @@
 - Write more efficient way to compute bdiff 
   for entire batch separately or a subsample of it
   preferably in parallel
-- Rework PCG optimizer models to have options as properties
 - Test whether non-generalization fenomena works
  the same for 1st order methods across diff. batch sizes and seq. sizes
   * if yes, try to isolate the issue. see if it's consequence of step rejection first
@@ -14,4 +13,6 @@
 
 - Rewrite PCGOptimizer to use RegularizedModel(mdl)
 
-Move optimizer specific debug to an internal log;
+- Change acceptance step for first order models to be more like a line-search
+  probably resetting lr for next step
+pred change for linear model with thrust region vs actual change...
