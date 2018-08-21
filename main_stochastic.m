@@ -20,9 +20,9 @@ DECIMATION = 100;
 loss = [loss; zeros(N,1)];
 ploss = [ploss; zeros(N,1)];
 
-[x, y] = samplebatch(BATCH_SIZE);
+%[x, y] = samplebatch(BATCH_SIZE);
 for i=i:i+N
-    % [x, y] = samplebatch(BATCH_SIZE);
+    [x, y] = samplebatch(BATCH_SIZE);
     [~, loss(i)] = call(mdl, x, y);
     ploss(i) = step(opt, loss(i));
     loss(i) = loss(i)*2/BATCH_SIZE;

@@ -24,7 +24,7 @@ mdl = RNNLinearRegressor(rnn);
 % opt.rejection_threshold   = 0;
 
 % ADAM
-opt = SGDOptimizer(mdl, 1e-4);
+opt = ASGDOptimizer(mdl, 1e-4);
 opt.momentum = 0.9;
 opt.accept = true;
 opt.lr_max = 1e-4;

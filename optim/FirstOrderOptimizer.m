@@ -1,14 +1,13 @@
-classdef SGDOptimizer < handle
+classdef FirstOrderOptimizer < handle
     %ADAMOPTIMIZER Summary of this class goes here
     %   Detailed explanation goes here
     
     properties % algorithm options
         model
         lr = 1e-3;
-        momentum = 0;
-        damping = 0;
-        nesterov = true;
-        l2 = 0; % regularization
+        % regularization
+        l2 = 0;
+        weightdecay = 0;
         
         % acceptence test
         accept = false;
@@ -19,12 +18,9 @@ classdef SGDOptimizer < handle
         
         log = Log('lr', 'reductionratio');
     end
-    properties (Access=private) % algorithm state
-        m = 0;
-    end
     
     methods
-        function opt = SGDOptimizer(model, lr, varargin)
+        function opt = FirstOrderOptimizer(model, lr, varargin)
             %PCGOPTIMIZER Construct an instance of this class
             %   Detailed explanation goes here
             opt.model = model;
@@ -34,10 +30,6 @@ classdef SGDOptimizer < handle
             for i=1:2:numel(varargin)
                 opt.(varargin{i}) = varargin{i+1};
             end
-        end
-        
-        function reset(opt)
-            opt.m = 0;
         end
         
         function plot(opt)
@@ -53,25 +45,18 @@ classdef SGDOptimizer < handle
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             lr_ = opt.lr;
-            momentum_ = opt.momentum;
-            damping_ = opt.damping;
-            nesterov_ = opt.nesterov;
             l2_ = opt.l2;
+            weightdecay_ = opt.weightdecay;
             
             g = bdiff(opt.model, [], 1);
             if l2_ > 0
                 g = g + l2_*opt.model.params;
             end
-            step = g;
-            if momentum_ > 0
-                opt.m = momentum_*opt.m + (1-damping_)*g;
-                if nesterov_
-                    step = step + momentum_*opt.m;
-                else
-                    step = opt.m;
-                end
+            step = lr_*computestep(opt, g);
+            
+            if weightdecay_ > 0
+                opt.model.params = (1-lr_*weightdecay_)*opt.model.params;
             end
-            step = - lr_*step;
             opt.model.params = opt.model.params + step;
             
             newloss = loss;
@@ -83,10 +68,10 @@ classdef SGDOptimizer < handle
                     opt.model.params = opt.model.params - step;
                     newloss = loss;
                 end
-                append(opt.log, lr_, reductionratio)
             else
-                append(opt.log, lr_, NaN)
+                reductionratio = NaN;
             end
+            append(opt.log, lr_, reductionratio)
         end
         
         function accept = update(opt, reductionratio)
@@ -98,5 +83,9 @@ classdef SGDOptimizer < handle
             end
             accept = (reductionratio > opt.rejection_threshold);
         end
+    end
+    
+    methods (Abstract)
+        step = computestep(opt, g)
     end
 end
