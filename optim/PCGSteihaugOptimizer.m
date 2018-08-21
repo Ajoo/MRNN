@@ -1,4 +1,4 @@
-classdef PCGSteinhaugOptimizer < handle
+classdef PCGSteihaugOptimizer < handle
     %PCGOPTIMIZER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -25,7 +25,7 @@ classdef PCGSteinhaugOptimizer < handle
     end
     
     methods
-        function opt = PCGSteinhaugOptimizer(model, initialthrustradius, varargin)
+        function opt = PCGSteihaugOptimizer(model, initialthrustradius, varargin)
             %PCGOPTIMIZER Construct an instance of this class
             %   Detailed explanation goes here
             opt.model = model;
@@ -60,7 +60,7 @@ classdef PCGSteinhaugOptimizer < handle
 %             figure(2);
             subplot(2,2,1); plot(max(getfield(opt.log, 'reductionratio'),0)), hold on
             subplot(2,2,2); plot(getfield(opt.log, 'niter')), hold on
-            subplot(2,2,3); plot(getfield(opt.log, 'thrustradius'), '--'), hold on
+            subplot(2,2,3); semilogy(getfield(opt.log, 'thrustradius'), '--'), hold on
                             plot(getfield(opt.log, 'nstep'))
             subplot(2,2,4); plot(getfield(opt.log, 'relres')), hold on
         end

@@ -12,9 +12,12 @@ classdef SGDOptimizer < handle
         
         % acceptence test
         accept = false;
-        accept_threshold = 0;
-        lr_increase = 1;
-        lr_decrease = 1;
+        lr_max = Inf;
+        lr_increase = 2;
+        lr_decrease = 1/4;
+        rejection_threshold = 0;
+        
+        log = Log('lr', 'reductionratio');
     end
     properties (Access=private) % algorithm state
         m = 0;
@@ -37,6 +40,15 @@ classdef SGDOptimizer < handle
             opt.m = 0;
         end
         
+        function plot(opt)
+%             figure(1);
+%             plot(getfield(opt.log, 'loss')), hold on
+
+%             figure(2);
+            subplot(2,1,1); plot(max(getfield(opt.log, 'reductionratio'),0)), hold on
+            subplot(2,1,2); semilogy(getfield(opt.log, 'lr')), hold on
+        end
+        
         function newloss = step(opt, loss)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
@@ -50,33 +62,41 @@ classdef SGDOptimizer < handle
             if l2_ > 0
                 g = g + l2_*opt.model.params;
             end
+            step = g;
             if momentum_ > 0
                 opt.m = momentum_*opt.m + (1-damping_)*g;
                 if nesterov_
-                    g = g + momentum_*opt.m;
+                    step = step + momentum_*opt.m;
                 else
-                    g = opt.m;
+                    step = opt.m;
                 end
             end
-            opt.model.params = opt.model.params - lr_*g;
+            step = - lr_*step;
+            opt.model.params = opt.model.params + step;
             
             newloss = loss;
             if opt.accept
                 [~, newloss] = recall(opt.model);
-                if ~update(opt, newloss-loss)
-                    opt.model.params = opt.model.params + lr_*g;
+                predchange = g'*step;
+                reductionratio = (newloss-loss)/predchange;
+                if ~update(opt, reductionratio)
+                    opt.model.params = opt.model.params - step;
                     newloss = loss;
                 end
+                append(opt.log, lr_, reductionratio)
+            else
+                append(opt.log, lr_, NaN)
             end
         end
         
-        function accept = update(opt, dloss)
-            accept = dloss <= opt.accept_threshold;
-            if accept
-                opt.lr = opt.lr*opt.lr_increase;
-            else
+        function accept = update(opt, reductionratio)
+            if reductionratio < 0.25
                 opt.lr = opt.lr*opt.lr_decrease;
+            elseif reductionratio > 0.75
+                opt.lr = opt.lr*opt.lr_increase;
+                opt.lr = min(opt.lr, opt.lr_max);
             end
+            accept = (reductionratio > opt.rejection_threshold);
         end
     end
 end

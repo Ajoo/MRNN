@@ -13,7 +13,7 @@ mdl = RNNLinearRegressor(rnn);
 %% optimizer
 
 % CG Steihaug
-% opt = PCGSteinhaugOptimizer(mdl, 1);
+% opt = PCGSteihaugOptimizer(mdl, 1);
 % alpha = 1;
 % opt.thrustradius_decrease = 0.25;
 % opt.thrustradius_increase = 2;
@@ -24,10 +24,11 @@ mdl = RNNLinearRegressor(rnn);
 % opt.rejection_threshold   = 0;
 
 % ADAM
-opt = ADAMOptimizer(mdl, 2e-3);
+opt = SGDOptimizer(mdl, 1e-4);
+opt.momentum = 0.9;
 opt.accept = true;
-opt.accept_threshold = 0;
-lr_decrease = 1/2;
+opt.lr_max = 1e-4;
+opt.rejection_threshold = 0;
 
 % (A)SGD
 % opt
@@ -41,7 +42,7 @@ valloss = valloss*2/size(yval, 2);
 %%
 loss = []; i = 1;
 %%
-N = 1000;
+N = 10000;
 DECIMATION = 100;
 
 for i=i:i+N
