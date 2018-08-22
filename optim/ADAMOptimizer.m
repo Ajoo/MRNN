@@ -19,6 +19,10 @@ classdef ADAMOptimizer < FirstOrderOptimizer
             opt.t = 0;
         end
         
+        function opt = ADAMOptimizer(lr, varargin)
+            opt@FirstOrderOptimizer(lr, varargin{:});
+        end
+        
         function step = computestep(opt, g)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here

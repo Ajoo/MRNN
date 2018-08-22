@@ -16,6 +16,10 @@ classdef ASGDOptimizer < FirstOrderOptimizer
             opt.m = 0;
         end
         
+        function opt = ASGDOptimizer(lr, varargin)
+            opt@FirstOrderOptimizer(lr, varargin{:});
+        end
+        
         function step = computestep(opt, g)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here

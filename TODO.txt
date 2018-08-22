@@ -12,7 +12,3 @@
 - Generalize LinearRegressor to handle multiple outputs (like LogisticRegressor)
 
 - Rewrite PCGOptimizer to use RegularizedModel(mdl)
-
-- Change acceptance step for first order models to be more like a line-search
-  probably resetting lr for next step
-pred change for linear model with thrust region vs actual change...

@@ -20,4 +20,7 @@ Can second order methods @ L = oo outperform first order @ L = 0
 
 BATCH_SIZE plays a huge role for the deterministic setting
 there seems to be a marginal value after which training on a single batch is valuable
-and won't overfit
+and won't overfit.
+As such there may be two important regimes where B > or < B_critical
+for B < B_critical a naive algoithm may not work easily but this is probably
+the most relevant setting for most ML tasks handled by Deep Learning

@@ -16,7 +16,7 @@ classdef FirstOrderOptimizer < handle
         lr_decrease = 1/4;
         rejection_threshold = 0;
         
-        log = Log('lr', 'reductionratio');
+        log
     end
     
     methods
@@ -30,6 +30,8 @@ classdef FirstOrderOptimizer < handle
             for i=1:2:numel(varargin)
                 opt.(varargin{i}) = varargin{i+1};
             end
+            
+            opt.log = Log('lr', 'reductionratio');
         end
         
         function plot(opt)

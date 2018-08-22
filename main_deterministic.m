@@ -13,25 +13,28 @@ mdl = RNNLinearRegressor(rnn);
 %% optimizer
 
 % CG Steihaug
-% opt = PCGSteihaugOptimizer(mdl, 1);
-% alpha = 1;
-% opt.thrustradius_decrease = 0.25;
-% opt.thrustradius_increase = 2;
-% opt.thrustradius_max      = Inf;
-% opt.preconditioner        = [];
-% opt.reltol                = 1e-5;
-% opt.maxiter               = 100;
-% opt.rejection_threshold   = 0;
+opt = PCGSteihaugOptimizer(mdl, 1);
+alpha = 1;
+opt.thrustradius_decrease = 0.25;
+opt.thrustradius_increase = 2;
+opt.thrustradius_max      = Inf;
+opt.preconditioner        = [];
+opt.reltol                = 1e-5;
+opt.maxiter               = 100;
+opt.rejection_threshold   = 0;
+
+% ASGD
+% opt = ASGDOptimizer(mdl, 1e-4);
+% opt.momentum = 0.7;
 
 % ADAM
-opt = ASGDOptimizer(mdl, 1e-4);
-opt.momentum = 0.9;
-opt.accept = true;
-opt.lr_max = 1e-4;
-opt.rejection_threshold = 0;
-
-% (A)SGD
-% opt
+% opt = ADAMOptimizer(mdl, 1e-4);
+% 
+% opt.accept = true;
+% opt.lr_increase = 10^(1/10e3);
+% opt.lr_decrease = 0.1^(1/10);
+% opt.lr_max = Inf;
+% opt.rejection_threshold = 0;
 %% Sample Validation Data and compute initial losses
 [xval, yval] = samplebatch(BATCH_SIZE);
 [~, valloss] = evaluate(mdl, xval, yval);
@@ -42,8 +45,8 @@ valloss = valloss*2/size(yval, 2);
 %%
 loss = []; i = 1;
 %%
-N = 10000;
-DECIMATION = 100;
+N = 1000;
+DECIMATION = 10;
 
 for i=i:i+N
     l =  step(opt, l);
