@@ -59,7 +59,7 @@ classdef MNISTDataset < handle
             %   Detailed explanation goes here
             batchidx = 1+mod(h.cursor:h.cursor+batchsize-1, h.size);
             x = double(reshape(h.images(:,batchidx).', 1, batchsize, []));
-            y = double(h.labels(1,batchidx));
+            y = onehot(10, double(h.labels(1,batchidx)));
             h.cursor = h.cursor + batchsize;
         end
         

@@ -21,17 +21,17 @@ classdef RNNLinearClassifier < handle
         p_
         dl_
         %d2l_
-        %y_
+        y_
     end
     
     methods
         function mdl = RNNLinearClassifier(rnn, K, loss, fullseq)
             %RNNLINEARREGRESSOR Construct an instance of this class
             %   Detailed explanation goes here
-            if nargin < 3 || isempty(fullseq)
+            if nargin < 4 || isempty(fullseq)
                 fullseq = false;
             end
-            if nargin < 2 || isempty(loss)
+            if nargin < 3 || isempty(loss)
                 loss = 'CROSSENTROPY';
             end
             mdl.rnn = rnn;
@@ -78,7 +78,7 @@ classdef RNNLinearClassifier < handle
             mdl.p_ = p;
             mdl.dl_ = mdl.dloss(y, p);
 %             mdl.d2l_ = mdl.d2loss(y, p);
-%             mdl.y_ = y;
+            mdl.y_ = y;
         end
         
         function [a, l] = recall(mdl)
@@ -90,12 +90,12 @@ classdef RNNLinearClassifier < handle
             sh = size(h);
             nk = mdl.classsize;
             a = reshape(mdl.Wo*h(:,:) + mdl.b, [nk, sh(2:end)]); %scores
-            [l, p] = mdl.loss(y, a);
+            [l, p] = mdl.loss(mdl.y_, a);
             
             % setup buffers
             mdl.h_ = h;
             mdl.p_ = p;
-            mdl.dl_ = mdl.dloss(y, p);
+            mdl.dl_ = mdl.dloss(mdl.y_, p);
 %             mdl.d2l_ = mdl.d2loss(y, p);
 %             mdl.y_ = y;
         end
