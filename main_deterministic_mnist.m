@@ -1,7 +1,8 @@
 % Dataset
-BATCH_SIZE = 1000; % enough for T=30
+BATCH_SIZE = 100;
+IDX = 339:439;
 mnist = MNISTDataset('train', BATCH_SIZE);
-samplebatch = @(B) get_batch(mnist, B);
+samplebatch = @(B) truncate_seq(@() get_batch(mnist, B), IDX);
 
 % Model
 HIDDEN_SIZE = 100;
