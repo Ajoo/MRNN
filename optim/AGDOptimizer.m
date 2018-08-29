@@ -1,4 +1,4 @@
-classdef ASGDOptimizer < FirstOrderOptimizer
+classdef AGDOptimizer < OptimizerBase
     %ADAMOPTIMIZER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -16,11 +16,11 @@ classdef ASGDOptimizer < FirstOrderOptimizer
             opt.m = 0;
         end
         
-        function opt = ASGDOptimizer(lr, varargin)
-            opt@FirstOrderOptimizer(lr, varargin{:});
+        function opt = AGDOptimizer(mdl)
+            opt@OptimizerBase(mdl);
         end
         
-        function step = computestep(opt, g)
+        function step = computestep(opt)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             g = grad(opt);

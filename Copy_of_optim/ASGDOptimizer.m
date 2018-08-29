@@ -23,8 +23,6 @@ classdef ASGDOptimizer < FirstOrderOptimizer
         function step = computestep(opt, g)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
-            g = grad(opt);
-            
             momentum_ = opt.momentum;
             
             if momentum_ > 0

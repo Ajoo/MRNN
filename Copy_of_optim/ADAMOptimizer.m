@@ -1,4 +1,4 @@
-classdef ADAMOptimizer < OptimizerBase
+classdef ADAMOptimizer < FirstOrderOptimizer
     %ADAMOPTIMIZER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -19,15 +19,13 @@ classdef ADAMOptimizer < OptimizerBase
             opt.t = 0;
         end
         
-        function opt = ADAMOptimizer(mdl, varargin)
-            opt@OptimizerBase(mdl, varargin{:});
+        function opt = ADAMOptimizer(lr, varargin)
+            opt@FirstOrderOptimizer(lr, varargin{:});
         end
         
-        function step = compute_step(opt)
+        function step = computestep(opt, g)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
-            g = grad(opt);
-            
             beta_ = opt.beta;
             eps_ = opt.eps;
             
