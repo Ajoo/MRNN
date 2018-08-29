@@ -12,3 +12,12 @@
 - Generalize LinearRegressor to handle multiple outputs (like LogisticRegressor)
 
 - Rewrite PCGOptimizer to use RegularizedModel(mdl)
+
+- Separate Optimizers into mixins
+  - First Order oracle vs Second Order oracle
+  - Stochastic vs Deterministic vs Hybrid setting
+    - Deterministic Thrust Region vs Line Search
+
+- Hybrid Idea:
+  - Fixed small TR steps and accumulate norm of each step instead of euclidean distance to previous point
+  - This might work like an approximation of geodesic distance
