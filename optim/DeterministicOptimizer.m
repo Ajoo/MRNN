@@ -1,16 +1,11 @@
-classdef FirstOrderOptimizer < handle
+classdef DeterministicOptimizer < ModelOptimizer
     %ADAMOPTIMIZER Summary of this class goes here
     %   Detailed explanation goes here
     
     properties % algorithm options
-        model
         lr = 1e-3;
-        % regularization
-        l2 = 0;
-        weightdecay = 0;
         
         % acceptence test
-        accept = false;
         lr_max = Inf;
         lr_increase = 2;
         lr_decrease = 1/4;
@@ -20,10 +15,10 @@ classdef FirstOrderOptimizer < handle
     end
     
     methods
-        function opt = FirstOrderOptimizer(model, lr, varargin)
+        function opt = DeterministicOptimizer(model, lr, varargin)
             %PCGOPTIMIZER Construct an instance of this class
             %   Detailed explanation goes here
-            opt.model = model;
+            opt@ModelOptimizer(model);
             if nargin >= 2 && ~isempty(lr)
                 opt.lr = lr;
             end
@@ -47,31 +42,15 @@ classdef FirstOrderOptimizer < handle
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             lr_ = opt.lr;
-            l2_ = opt.l2;
-            weightdecay_ = opt.weightdecay;
             
-            g = bdiff(opt.model, [], 1);
-            if l2_ > 0
-                g = g + l2_*opt.model.params;
-            end
-            step = lr_*computestep(opt, g);
+            [step, predchange] = computestep(opt);
+            make_step(opt, lr_*step);
             
-            if weightdecay_ > 0
-                opt.model.params = (1-lr_*weightdecay_)*opt.model.params;
-            end
-            opt.model.params = opt.model.params + step;
-            
-            newloss = loss;
-            if opt.accept
-                [~, newloss] = recall(opt.model);
-                predchange = g'*step;
-                reductionratio = (newloss-loss)/predchange;
-                if ~update(opt, reductionratio)
-                    opt.model.params = opt.model.params - step;
-                    newloss = loss;
-                end
-            else
-                reductionratio = NaN;
+            [~, newloss] = recall(opt.model);
+            reductionratio = (newloss-loss)/predchange;
+            if ~update(opt, reductionratio)
+                opt.model.params = opt.model.params - step;
+                newloss = loss;
             end
             append(opt.log, lr_, reductionratio)
         end
@@ -87,7 +66,4 @@ classdef FirstOrderOptimizer < handle
         end
     end
     
-    methods (Abstract)
-        step = computestep(opt, g)
-    end
 end

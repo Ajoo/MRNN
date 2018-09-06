@@ -1,4 +1,4 @@
-classdef OptimizerBase < handle
+classdef ModelOptimizer < handle
     %OPTIMIZERBASE Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -9,7 +9,7 @@ classdef OptimizerBase < handle
     end
     
     methods
-        function opt = OptimizerBase(model)
+        function opt = ModelOptimizer(model)
             %PCGOPTIMIZER Construct an instance of this class
             %   Detailed explanation goes here
             opt.model = model;
@@ -26,6 +26,13 @@ classdef OptimizerBase < handle
             gv = gvp(opt.model, v);
             if opt.l2 > 0
                  gv = gv + opt.l2*v;
+            end
+        end
+        
+        function hv = hvp(opt, v)
+            hv = hvp(opt.model, v);
+            if opt.l2 > 0
+                 hv = hv + opt.l2*v;
             end
         end
         

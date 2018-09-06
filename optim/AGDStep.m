@@ -1,4 +1,4 @@
-classdef AGDOptimizer < OptimizerBase
+classdef AGDStep < handle
     %ADAMOPTIMIZER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -11,31 +11,28 @@ classdef AGDOptimizer < OptimizerBase
         m = 0;
     end
     
-    methods
+    methods (Sealed)
         function reset(opt)
             opt.m = 0;
         end
         
-        function opt = AGDOptimizer(mdl)
-            opt@OptimizerBase(mdl);
-        end
-        
-        function step = computestep(opt)
+        function [step, predchange] = computestep(opt)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             g = grad(opt);
-            
             momentum_ = opt.momentum;
             
             if momentum_ > 0
                 opt.m = momentum_*opt.m + (1-opt.damping)*g;
                 if opt.nesterov
-                    g = g + momentum_*opt.m;
+                    step = -g - momentum_*opt.m;
                 else
-                    g = opt.m;
+                    step = -opt.m;
                 end
+            else
+                step = -g;
             end
-            step = -g;
+            predchange = dot(step, g);
         end
     end
 end
