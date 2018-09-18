@@ -33,11 +33,9 @@ classdef StochasticOptimizer < ModelOptimizer
         
         function step(opt)
             %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            lr_ = opt.lr;
-            
-            make_step(opt, lr_*compute_step(opt));
-            append(opt.log, lr_)
+            %   Detailed explanation goes here            
+            make_step(opt, opt.lr*compute_step(opt));
+            append(opt.log, opt.lr)
         end
         
     end

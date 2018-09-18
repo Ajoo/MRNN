@@ -13,8 +13,8 @@ classdef PCGStep < handle
                                       'niter');
     end
     
-    methods (Sealed)        
-        function [step, predchange, gnstep] = computestep(opt, maxstep)
+    methods (Sealed)
+        function [step, predchange, limited, gnstep] = compute_step(opt, maxstep)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
             g = grad(opt);
@@ -36,8 +36,15 @@ classdef PCGStep < handle
             end
 
             % compute step
-            [step, flag, relres, iter] = cpcg(@opt.gvp, -grad(opt), tol, ...
-                opt.maxiter, M, [], maxstep);
+            if nargin >= 2
+                [step, flag, relres, iter] = cpcg(@opt.gvp, -grad(opt), tol, ...
+                    opt.maxiter, M, [], maxstep);
+                limited = flag==5;
+            else
+                [step, flag, relres, iter] = cpcg(@opt.gvp, -grad(opt), tol, ...
+                    opt.maxiter, M, [], inf);
+                limited = false;
+            end
             
             if nargout >= 2
                 % compute predicted reduction along step
