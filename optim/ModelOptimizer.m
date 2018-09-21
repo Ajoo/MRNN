@@ -7,6 +7,9 @@ classdef ModelOptimizer < handle
         % regularization
         l2 = 0;
     end
+    properties (Dependent)
+        params;
+    end
     
     methods
         function opt = ModelOptimizer(model)
@@ -46,6 +49,13 @@ classdef ModelOptimizer < handle
             if nargin >= 2 && ~isempty(maxstep)
                 step = step/norm(step)*maxstep;
             end
+        end
+        
+        function p = get.params(opt)
+            p = opt.model.params;
+        end
+        function set.params(opt, p)
+            opt.model.params = p;
         end
     end
 

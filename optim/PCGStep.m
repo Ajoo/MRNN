@@ -14,6 +14,9 @@ classdef PCGStep < handle
     end
     
     methods (Sealed)
+        function reset(opt)
+        end
+        
         function [step, predchange, limited, gnstep] = compute_step(opt, maxstep)
             %METHOD1 Summary of this method goes here
             %   Detailed explanation goes here
