@@ -22,10 +22,11 @@ classdef ModelOptimizer < handle
             end
         end
         
-        function gv = gvp(opt, v)
-            gv = gvp(opt.model, v);
+        function [gv, n2jv] = gvp(opt, v)
+            [gv, n2jv] = gvp(opt.model, v);
             if opt.l2 > 0
                  gv = gv + opt.l2*v;
+                 n2jv = n2jv + opt.l2*v(:)'*v;
             end
         end
         

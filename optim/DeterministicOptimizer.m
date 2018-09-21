@@ -26,8 +26,15 @@ classdef DeterministicOptimizer < ModelOptimizer
             end            
             if direction ~= 0
                 for i=1:numel(fields)
-                    factors = opt.update_params.(field);
-                    opt.(field) = opt.(field) * factors(direction);
+                    field = fields{i};
+                    factor = opt.update_params.(field).factors(direction);
+                    limit = opt.update_params.(field).limits(direction);
+                    opt.(field) = opt.(field) * factor;
+                    if factor > 1
+                        opt.(field) = min(opt.(field), limit);
+                    elseif factor < 1
+                        opt.(field) = max(opt.(field), limit);
+                    end
                 end
             end
             

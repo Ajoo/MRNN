@@ -20,7 +20,8 @@ classdef DeterministicTROptimizer < DeterministicOptimizer
                 opt.(varargin{i}) = varargin{i+1};
             end
             
-            opt.update_params = struct('tr', [1/4 2]);
+            opt.update_params.tr = struct('factors', [1/4 2], ...
+                                          'limits', [0 Inf]);
             opt.log = Log('tr', 'reductionratio');
         end
         

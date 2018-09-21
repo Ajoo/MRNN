@@ -15,7 +15,7 @@ mdl = RNNLinearRegressor(rnn);
 %% optimizer
 
 % CG Steihaug
-opt = PCGSteihaugOptimizer(mdl, 1);
+opt = OldPCGSteihaugOptimizer(mdl, 1);
 alpha = 1;
 opt.thrustradius_decrease = 0.25;
 opt.thrustradius_increase = 2;
@@ -24,6 +24,10 @@ opt.preconditioner        = [];
 opt.reltol                = 1e-5;
 opt.maxiter               = 100;
 opt.rejection_threshold   = 0;
+
+opt = PCGSteihaugOptimizer(mdl, 1);
+opt.reltol                = 1e-5;
+opt.maxiter               = 100;
 
 % ASGD
 % opt = ASGDOptimizer(mdl, 1e-4);

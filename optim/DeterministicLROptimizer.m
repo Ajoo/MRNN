@@ -21,7 +21,8 @@ classdef DeterministicLROptimizer < DeterministicOptimizer
                 opt.(varargin{i}) = varargin{i+1};
             end
             
-            opt.update_params = struct('lr', [1/4 2]);
+            opt.update_params.lr = struct('factors', [1/4 2],...
+                                          'limits', [0 Inf]);
             opt.log = Log('lr', 'reductionratio');
         end
         

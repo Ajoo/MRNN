@@ -1,4 +1,4 @@
-classdef PCGSteihaugOptimizer < handle
+classdef OldPCGSteihaugOptimizer < handle
     %PCGOPTIMIZER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -25,7 +25,7 @@ classdef PCGSteihaugOptimizer < handle
     end
     
     methods
-        function opt = PCGSteihaugOptimizer(model, initialthrustradius, varargin)
+        function opt = OldPCGSteihaugOptimizer(model, initialthrustradius, varargin)
             %PCGOPTIMIZER Construct an instance of this class
             %   Detailed explanation goes here
             opt.model = model;
