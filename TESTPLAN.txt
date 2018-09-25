@@ -9,6 +9,7 @@ Test two extremes and middle ground of the conservative subproblem approach:
   start being more relevant in this regime
 
 - Full optimization for each batch, cumulative averaging over batches
+  or other averaging technique
 
 spectrum should go:
 
@@ -24,3 +25,11 @@ and won't overfit.
 As such there may be two important regimes where B > or < B_critical
 for B < B_critical a naive algoithm may not work easily but this is probably
 the most relevant setting for most ML tasks handled by Deep Learning
+
+----------------------------------------------------------------------------
+
+Can solve problems in the regime L = oo, B > B_critical (deterministic with enough data for learning) with 2nd order methods
+Can solve problems in the regime L ~ 1, B = Any (standard stochastic setting) with first order methods
+Solve problems in between these regimes???
+
+Look into natural gradient and the Fisher Information

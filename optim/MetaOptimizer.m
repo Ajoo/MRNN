@@ -6,6 +6,8 @@ classdef MetaOptimizer < handle
         opt
         gamma = 0.1;
         nsubsteps = 10;
+        
+        log = Log('l0', 'lf');
     end
     
     methods
@@ -13,13 +15,29 @@ classdef MetaOptimizer < handle
             mopt.opt = opt;
         end
         
-        function l0 = step(mopt, l0)
+        function plot(mopt)
+            semilogy([getfield(mopt.log, 'l0') getfield(mopt.log, 'lf')])
+        end
+        
+        function [l0, lf] = step(mopt, x, y)
             reset(mopt.opt); % reset optmizer state
+            [~, l0] = call(mopt.opt.model, x, y);
+            
+            lf = l0;
             p0 = mopt.opt.params;
             for i=1:mopt.nsubsteps
-                l0 = step(mopt.opt, l0);
+                lf = step(mopt.opt, lf);
             end
-            mopt.opt.params = mopt.opt.params*mopt.gamma + p0*(1-mopt.gamma);
+            
+            gamma = mopt.gamma;
+            if gamma <= 0
+                B = size(x,2);
+                gamma = B/(B-0.9*gamma);
+                mopt.gamma = mopt.gamma-B;
+            end
+            
+            mopt.opt.params = mopt.opt.params*(1-gamma) + p0*gamma;
+            append(mopt.log, l0, lf);
         end        
     end
     
