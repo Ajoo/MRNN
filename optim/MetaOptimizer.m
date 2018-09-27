@@ -36,7 +36,7 @@ classdef MetaOptimizer < handle
                 mopt.gamma = mopt.gamma-B;
             end
             
-            mopt.opt.params = mopt.opt.params*(1-gamma) + p0*gamma;
+            mopt.opt.params = mopt.opt.params*gamma + p0*(1-gamma);
             append(mopt.log, l0, lf);
         end        
     end

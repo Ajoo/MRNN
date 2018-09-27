@@ -33,3 +33,11 @@ Can solve problems in the regime L ~ 1, B = Any (standard stochastic setting) wi
 Solve problems in between these regimes???
 
 Look into natural gradient and the Fisher Information
+
+Problem with low B, high L, high P => OVERFITTING
+How to do early stopping (for L), i.e. know when overfitting is ocurring 
+and stepping into the next batch
+
+-> Based on (information) theoretical principles
+-> Based on empirical principles (Early stop with validation set)
+-> Hybrid

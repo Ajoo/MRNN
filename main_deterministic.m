@@ -1,10 +1,10 @@
 % Dataset
 T = 100;
 BATCH_SIZE = 100;
-BATCH_SIZE = 1000; % enough for T=30
+BATCH_SIZE = 250; % enough for T=30
 samplebatch = @(B) sampleaddition(B, T);
 
-mnist = MNISTDataset('train', BATCH_SIZE);
+% mnist = MNISTDataset('train', BATCH_SIZE);
 
 % Model
 HIDDEN_SIZE = 100;
@@ -15,16 +15,6 @@ mdl = RNNLinearRegressor(rnn);
 %% optimizer
 
 % CG Steihaug
-opt = OldPCGSteihaugOptimizer(mdl, 1);
-alpha = 1;
-opt.thrustradius_decrease = 0.25;
-opt.thrustradius_increase = 2;
-opt.thrustradius_max      = Inf;
-opt.preconditioner        = [];
-opt.reltol                = 1e-5;
-opt.maxiter               = 100;
-opt.rejection_threshold   = 0;
-
 opt = PCGSteihaugOptimizer(mdl, 1);
 opt.reltol                = 1e-5;
 opt.maxiter               = 100;
@@ -51,7 +41,7 @@ valloss = valloss*2/size(yval, 2);
 %%
 loss = []; i = 1;
 %%
-N = 1000;
+N = 2000;
 DECIMATION = 10;
 
 for i=i:i+N

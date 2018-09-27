@@ -1,6 +1,6 @@
 % Dataset
 T = 100;
-BATCH_SIZE = 100;
+BATCH_SIZE = 250;
 % BATCH_SIZE = 250; % enough for T=30
 samplebatch = @(B) sampleaddition(B, T);
 
@@ -29,7 +29,10 @@ opt.maxiter               = 100;
 
 mopt = MetaOptimizer(opt);
 mopt.nsubsteps = 10;
-mopt.gamma = 0;
+mopt.gamma = 0.01;
+%% other
+mopt = MetaValOptimizer(opt);
+
 
 %% Sample Validation Data and compute initial losses
 [xval, yval] = samplebatch(BATCH_SIZE);
@@ -47,6 +50,6 @@ for i=1:N
             i, l0*2/BATCH_SIZE, lf*2/BATCH_SIZE, valloss(end));
 end
 %%
-figure(1); plot(loss), hold on, plot(DECIMATION*(1:numel(valloss)), valloss, '.-')
-
+% figure(1); plot(loss), hold on, plot(DECIMATION*(1:numel(valloss)), valloss, '.-')
+figure(1); plot(mopt)
 figure(2); plot(opt)
