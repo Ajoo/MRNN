@@ -21,3 +21,9 @@
 - Hybrid Idea:
   - Fixed small TR steps and accumulate norm of each step instead of euclidean distance to previous point
   - This might work like an approximation of geodesic distance
+
+-Architecture:
+  - Composition for Optimizers:
+    .step computer (has internal state: momentum, etc...)
+    .globalizer (tr, lr, line search, etc...) (may interfere with step computer)
+    .regularizer (l2, l1, l2 w.r.t. fixed point)

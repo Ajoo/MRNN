@@ -1,6 +1,6 @@
 % Dataset
 T = 100;
-BATCH_SIZE = 250;
+BATCH_SIZE = 100;
 % BATCH_SIZE = 250; % enough for T=30
 samplebatch = @(B) sampleaddition(B, T);
 
@@ -29,7 +29,7 @@ opt.maxiter               = 100;
 
 mopt = MetaOptimizer(opt);
 mopt.nsubsteps = 10;
-mopt.gamma = 0.01;
+mopt.gamma = 0;
 %% other
 mopt = MetaValOptimizer(opt);
 
@@ -39,15 +39,15 @@ mopt = MetaValOptimizer(opt);
 [~, valloss] = evaluate(mdl, xval, yval);
 valloss = valloss*2/size(yval, 2);
 %%
-N = 100;
+N = 500;
 for i=1:N
     [x, y] = samplebatch(BATCH_SIZE);
-    [l0, lf] = step(mopt, x, y);
+    [l0, lf, nsubsteps] = step(mopt, x, y);
     
-    [~, vl] = evaluate(mdl, xval, yval);
-    valloss(end+1) = 2*vl/size(yval, 2);
-    fprintf('Iter: %i, Train Error: %1.4f:%1.4f, Val Error: %1.4f\n', ...
-            i, l0*2/BATCH_SIZE, lf*2/BATCH_SIZE, valloss(end));
+%     [~, vl] = evaluate(mdl, xval, yval);
+%     valloss(end+1) = 2*vl/size(yval, 2);
+    fprintf('Iter: %i, Train Error: %1.4f:%1.4f, nsubsteps: %i\n', ...
+            i, l0*2/BATCH_SIZE, lf*2/BATCH_SIZE, nsubsteps);
 end
 %%
 % figure(1); plot(loss), hold on, plot(DECIMATION*(1:numel(valloss)), valloss, '.-')

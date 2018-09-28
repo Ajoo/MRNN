@@ -19,7 +19,7 @@ classdef MetaOptimizer < handle
             semilogy([getfield(mopt.log, 'l0') getfield(mopt.log, 'lf')])
         end
         
-        function [l0, lf] = step(mopt, x, y)
+        function [l0, lf, i] = step(mopt, x, y)
             reset(mopt.opt); % reset optmizer state
             [~, l0] = call(mopt.opt.model, x, y);
             

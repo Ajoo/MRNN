@@ -41,3 +41,39 @@ and stepping into the next batch
 -> Based on (information) theoretical principles
 -> Based on empirical principles (Early stop with validation set)
 -> Hybrid
+
+THEORY
+
+2 phases:
+-> convergence phase: response to large initial parameter error is dominant
+   (deterministic input response)
+   Deals with larger parameter shifts. Riemannian effects might be important
+
+-> fine tuning phase: response to stochastic noise is dominant 
+   (stochastic input response)
+   information theoretical properties can be used to reduce the
+   variance of the estimator and achieve convergence towards 0.
+
+DEFINE B_critical as the batch size for which there is a reasonable expectation
+that single batch optimization achieves an initial-error term << variance term
+(i.e. we can reach the fine-tuning phase using a single batch with high probability)
+
+how to soften restriction that during convergence phase B >= B_critical must be used???
+-> standard stochastic optimization can use B << B_critical
+   . sequential batch, single step per batch (1 grad computation, possibly hessian)
+   achieves enough averaging through small enough step size
+-> another approach: distributed computation (like ADMM). Split B > B_critical
+   through N paralel processors. Alternate (full or partial) optimization with
+   aggregation. Surrogate loss function which contains batch loss and a "prior" loss
+   which expresses the global consensus
+-> SVI. full optimization per batch with exponential averaging of parameters.
+   might only work for small capacity models...
+-> Consistency based solution. Add penalty term for deviating from previous solution
+
+
+   - Split training into N parallel batches B. Alternate (L-)optimizing 
+     with aggregating results (using euclidean or riemannian metric).
+     Soften N
+
+
+
